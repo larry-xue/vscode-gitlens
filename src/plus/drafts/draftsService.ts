@@ -1,6 +1,8 @@
+import { EntityIdentifierUtils } from '@gitkraken/provider-apis';
 import type { Disposable } from 'vscode';
 import type { HeadersInit } from '@env/fetch';
 import type { Container } from '../../container';
+import type { PullRequest } from '../../git/models/pullRequest';
 import { isSha, isUncommitted, shortenRevision } from '../../git/models/reference';
 import type { Repository } from '../../git/models/repository';
 import { isRepository } from '../../git/models/repository';
@@ -38,6 +40,7 @@ import { getLogScope } from '../../system/logger.scope';
 import { getSettledValue } from '../../system/promise';
 import type { ServerConnection } from '../gk/serverConnection';
 import type { IntegrationId } from '../integrations/providers/models';
+import { getEntityIdentifier } from '../integrations/providers/utils';
 
 export class DraftService implements Disposable {
 	constructor(
@@ -822,6 +825,19 @@ export class DraftService implements Disposable {
 			provider: integration.authProvider.id,
 			token: session.accessToken,
 		};
+	}
+
+	async getCodeSuggestions(pullRequest: PullRequest, repository: Repository): Promise<Draft[]> {
+		const entityIdentifier = getEntityIdentifier(pullRequest);
+		const prEntityId = EntityIdentifierUtils.encode(entityIdentifier);
+		const providerAuth = await this.getProviderAuthFromRepository(repository);
+
+		// swallowing this error as we don't need to fail here
+		try {
+			return this.getDraftsCore({ prEntityId: prEntityId, providerAuth: providerAuth, isArchived: true });
+		} catch (e) {
+			return [];
+		}
 	}
 }
 
