@@ -422,20 +422,51 @@ export class DraftService implements Disposable {
 	}
 
 	@log()
-	async getDrafts(): Promise<Draft[]> {
+	async getDrafts(isArchived?: boolean): Promise<Draft[]> {
+		return this.getDraftsCore(isArchived ? { isArchived: isArchived } : undefined);
+	}
+
+	@log()
+	async getDraftsCore(options?: { prEntityId?: string; providerAuth?: any; isArchived?: boolean }): Promise<Draft[]> {
 		const scope = getLogScope();
 		type Result = { data: DraftResponse[] };
 
-		const rsp = await this.connection.fetchGkDevApi('/v1/drafts', { method: 'GET' });
+		const queryStrings = [];
+		if (options?.prEntityId != null) {
+			if (options.providerAuth == null) {
+				throw new Error('No provider integration found');
+			}
+			queryStrings.push(`prEntityId=${options.prEntityId}`);
+		}
+
+		if (options?.isArchived) {
+			queryStrings.push('archived=true');
+		}
+
+		let headers;
+		if (options?.providerAuth) {
+			headers = {
+				'Provider-Auth': options.providerAuth,
+			};
+		}
+
+		const rsp = await this.connection.fetchGkDevApi(
+			`/v1/drafts${queryStrings.length ? `?${queryStrings.join('&')}` : ''}`,
+			{
+				method: 'GET',
+				headers: headers,
+			},
+		);
 
 		if (!rsp.ok) {
 			await handleBadDraftResponse('Unable to open drafts', rsp, scope);
 		}
 
-		const draft = ((await rsp.json()) as Result).data;
+		const drafts = ((await rsp.json()) as Result).data;
+
 		const { account } = await this.container.subscription.getSubscription();
 
-		return draft.map((d): Draft => {
+		return drafts.map((d): Draft => {
 			const isMine = d.createdBy === account?.id;
 			return {
 				draftType: 'cloud',
