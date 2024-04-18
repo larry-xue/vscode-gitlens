@@ -75,55 +75,56 @@ export const enum SubscriptionState {
 }
 
 export function computeSubscriptionState(subscription: Optional<Subscription, 'state'>): SubscriptionState {
-	const {
-		account,
-		plan: { actual, effective },
-		previewTrial: preview,
-	} = subscription;
+	return SubscriptionState.Paid;
+	// const {
+	// 	account,
+	// 	plan: { actual, effective },
+	// 	previewTrial: preview,
+	// } = subscription;
 
-	if (account?.verified === false) return SubscriptionState.VerificationRequired;
+	// if (account?.verified === false) return SubscriptionState.VerificationRequired;
 
-	if (actual.id === effective.id) {
-		switch (effective.id) {
-			case SubscriptionPlanId.Free:
-				return preview == null ? SubscriptionState.Free : SubscriptionState.FreePreviewTrialExpired;
+	// if (actual.id === effective.id) {
+	// 	switch (effective.id) {
+	// 		case SubscriptionPlanId.Free:
+	// 			return preview == null ? SubscriptionState.Free : SubscriptionState.FreePreviewTrialExpired;
 
-			case SubscriptionPlanId.FreePlus: {
-				if (effective.nextTrialOptInDate != null && new Date(effective.nextTrialOptInDate) < new Date()) {
-					return SubscriptionState.FreePlusTrialReactivationEligible;
-				}
+	// 		case SubscriptionPlanId.FreePlus: {
+	// 			if (effective.nextTrialOptInDate != null && new Date(effective.nextTrialOptInDate) < new Date()) {
+	// 				return SubscriptionState.FreePlusTrialReactivationEligible;
+	// 			}
 
-				return SubscriptionState.FreePlusTrialExpired;
-			}
+	// 			return SubscriptionState.FreePlusTrialExpired;
+	// 		}
 
-			case SubscriptionPlanId.Pro:
-			case SubscriptionPlanId.Teams:
-			case SubscriptionPlanId.Enterprise:
-				return SubscriptionState.Paid;
-		}
-	}
+	// 		case SubscriptionPlanId.Pro:
+	// 		case SubscriptionPlanId.Teams:
+	// 		case SubscriptionPlanId.Enterprise:
+	// 			return SubscriptionState.Paid;
+	// 	}
+	// }
 
-	switch (effective.id) {
-		case SubscriptionPlanId.Free:
-			return preview == null ? SubscriptionState.Free : SubscriptionState.FreeInPreviewTrial;
+	// switch (effective.id) {
+	// 	case SubscriptionPlanId.Free:
+	// 		return preview == null ? SubscriptionState.Free : SubscriptionState.FreeInPreviewTrial;
 
-		case SubscriptionPlanId.FreePlus: {
-			if (effective.nextTrialOptInDate != null && new Date(effective.nextTrialOptInDate) < new Date()) {
-				return SubscriptionState.FreePlusTrialReactivationEligible;
-			}
+	// 	case SubscriptionPlanId.FreePlus: {
+	// 		if (effective.nextTrialOptInDate != null && new Date(effective.nextTrialOptInDate) < new Date()) {
+	// 			return SubscriptionState.FreePlusTrialReactivationEligible;
+	// 		}
 
-			return SubscriptionState.FreePlusTrialExpired;
-		}
+	// 		return SubscriptionState.FreePlusTrialExpired;
+	// 	}
 
-		case SubscriptionPlanId.Pro:
-			return actual.id === SubscriptionPlanId.Free
-				? SubscriptionState.FreeInPreviewTrial
-				: SubscriptionState.FreePlusInTrial;
+	// 	case SubscriptionPlanId.Pro:
+	// 		return actual.id === SubscriptionPlanId.Free
+	// 			? SubscriptionState.FreeInPreviewTrial
+	// 			: SubscriptionState.FreePlusInTrial;
 
-		case SubscriptionPlanId.Teams:
-		case SubscriptionPlanId.Enterprise:
-			return SubscriptionState.Paid;
-	}
+	// 	case SubscriptionPlanId.Teams:
+	// 	case SubscriptionPlanId.Enterprise:
+	// 		return SubscriptionState.Paid;
+	// }
 }
 
 export function getSubscriptionPlan(
